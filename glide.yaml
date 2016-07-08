@@ -4,3 +4,4 @@ import:
   subpackages:
   - plugin
 - package: github.com/olekukonko/tablewriter
+- package: github.com/patrickmn/sortutil

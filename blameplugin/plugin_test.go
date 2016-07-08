@@ -8,6 +8,8 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	. "github.com/pivotalservices/diego-blame/blameplugin"
+	"os"
+	"strconv"
 )
 
 var _ = Describe("DiegoBlame", func() {
@@ -53,8 +55,9 @@ var _ = Describe("DiegoBlame", func() {
 			})
 
 			It("should return a valid list of app guids", func() {
-				Ω(len(guidArray)).Should(Equal(1))
-				Ω(guidArray).Should(ConsistOf("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"))
+				Ω(len(guidArray)).Should(Equal(2))
+				Ω(guidArray[0]).Should(Equal("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"))
+				Ω(guidArray[1]).Should(Equal("yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy"))
 			})
 		})
 	})
@@ -68,9 +71,11 @@ var _ = Describe("DiegoBlame", func() {
 				cli.CliCommandWithoutTerminalOutputReturns([]string{string(b)}, nil)
 				stats = CallStatsAPI("xxx-xxx-xxxxx-xxxxx", cli, "192.xxx.x.255")
 			})
-			It("then it should return the stats for that app instance", func() {
-				Ω(len(stats)).Should(Equal(1))
-				Ω(stats[0].Stats.Name).Should(Equal("cool-server"))
+			It("then it should return the stats for apps instances", func() {
+				Ω(len(stats)).Should(Equal(2))
+				namePrefixMatch := "cool-server"
+				Ω(stats[0].Stats.Name).Should(HavePrefix(namePrefixMatch))
+				Ω(stats[1].Stats.Name).Should(HavePrefix(namePrefixMatch))
 			})
 		})
 
@@ -84,6 +89,29 @@ var _ = Describe("DiegoBlame", func() {
 			})
 			It("then it should return no stats", func() {
 				Ω(len(stats)).Should(Equal(0))
+			})
+		})
+	})
+	Describe("Given an array of AppStat", func() {
+		var stats []AppStat
+		var b = os.Stdout
+		Context("when table with application statistics is rendered", func() {
+			BeforeEach(func() {
+				cli := new(pluginfakes.FakeCliConnection)
+				statFile, _ := ioutil.ReadFile("fixtures/stats.json")
+				cli.CliCommandWithoutTerminalOutputReturns([]string{string(statFile)}, nil)
+				stats = CallStatsAPI("xxx-xxx-xxxxx-xxxxx", cli, "192.xxx.x.255")
+			})
+			It("should print the table with stats data sorted by mem ratio desc", func() {
+				sortedData := PrettyColumnPrint(stats, b)
+				memRatioOne, _ := strconv.ParseFloat(sortedData[0][7], 64)
+				memRatioTwo, _ := strconv.ParseFloat(sortedData[1][7], 64)
+				Ω(memRatioOne).Should(BeNumerically(">", memRatioTwo))
+			})
+			It("should print empty table when no data is returned by stats call", func(){
+				e := []AppStat{}
+				noData := PrettyColumnPrint(e, b)
+				Ω(noData).Should(BeEmpty())
 			})
 		})
 	})

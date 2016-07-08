@@ -12,6 +12,7 @@ import (
 	"github.com/krujos/cfcurl"
 	"github.com/olekukonko/tablewriter"
 	"github.com/xchapter7x/lo"
+	"github.com/patrickmn/sortutil"
 )
 
 const name = "diego-blame"
@@ -39,12 +40,14 @@ func (c *DiegoBlame) Run(cli plugin.CliConnection, args []string) {
 		appStatusArray = append(appStatusArray, CallStatsAPI(guid, cli, hostSelector)...)
 	}
 
-	prettyColumnPrint(appStatusArray, c.Writer)
+	PrettyColumnPrint(appStatusArray, c.Writer)
 }
 
-func prettyColumnPrint(appStatusArray []AppStat, writer io.Writer) {
+func PrettyColumnPrint(appStatusArray []AppStat, writer io.Writer) (res [][]string){
 	table := tablewriter.NewWriter(writer)
-	table.SetHeader([]string{"AppName", "State", "Host:Port", "Disk-Usage", "Disk-Quota", "Mem-Usage", "Mem-Quota", "CPU-Usage", "Uptime", "URIs"})
+	table.SetHeader([]string{"AppName", "State", "Host:Port", "Disk-Usage", "Disk-Quota", "Mem-Usage", "Mem-Quota", "Mem-Ratio", "CPU-Usage", "Uptime", "URIs"})
+
+	res = make([][]string, 0)
 
 	for _, status := range appStatusArray {
 		row := []string{
@@ -55,13 +58,20 @@ func prettyColumnPrint(appStatusArray []AppStat, writer io.Writer) {
 			fmt.Sprintf("%v", status.Stats.DiskQuota),
 			fmt.Sprintf("%v", status.Stats.Usage.Mem),
 			fmt.Sprintf("%v", status.Stats.MemQuota),
+			fmt.Sprintf("%v", status.Stats.Usage.Mem / status.Stats.MemQuota),
 			fmt.Sprintf("%v", status.Stats.Usage.CPU),
 			fmt.Sprintf("%v", status.Stats.Uptime),
 			fmt.Sprintf("%v", status.Stats.URIs),
 		}
-		table.Append(row)
+		res = append(res, row)
+	}
+
+	if ( 0 < len(res)) {
+		sortutil.DescByIndex(res, 7)
+		table.AppendBulk(res)
 	}
 	table.Render()
+	return
 }
 
 func getStatsURL(guid string) (statsURL string) {
