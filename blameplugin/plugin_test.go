@@ -61,8 +61,9 @@ var _ = Describe("DiegoBlame", func() {
 			})
 
 			It("should return a valid list of app guids", func() {
-				Ω(len(guidArray)).Should(Equal(1))
-				Ω(guidArray).Should(ConsistOf("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"))
+				Ω(len(guidArray)).Should(Equal(2))
+				Ω(guidArray[0]).Should(Equal("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"))
+				Ω(guidArray[1]).Should(Equal("yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy"))
 			})
 		})
 	})
@@ -76,9 +77,11 @@ var _ = Describe("DiegoBlame", func() {
 				cli.CliCommandWithoutTerminalOutputReturns([]string{string(b)}, nil)
 				stats = CallStatsAPI("xxx-xxx-xxxxx-xxxxx", cli, "192.xxx.x.255")
 			})
-			It("then it should return the stats for that app instance", func() {
-				Ω(len(stats)).Should(Equal(1))
-				Ω(stats[0].Stats.Name).Should(Equal("cool-server"))
+			It("then it should return the stats for apps instances", func() {
+				Ω(len(stats)).Should(Equal(2))
+				namePrefixMatch := "cool-server"
+				Ω(stats[0].Stats.Name).Should(HavePrefix(namePrefixMatch))
+				Ω(stats[1].Stats.Name).Should(HavePrefix(namePrefixMatch))
 			})
 		})
 
@@ -92,6 +95,35 @@ var _ = Describe("DiegoBlame", func() {
 			})
 			It("then it should return no stats", func() {
 				Ω(len(stats)).Should(Equal(0))
+			})
+		})
+	})
+	Describe("Given an array of AppStat", func() {
+		var stats []AppStat
+		var b *bytes.Buffer
+		var cli = new(pluginfakes.FakeCliConnection)
+		Context("when table with application statistics is rendered", func() {
+			BeforeEach(func() {
+				b = new(bytes.Buffer)
+				cli := new(pluginfakes.FakeCliConnection)
+				statFile, _ := ioutil.ReadFile("fixtures/stats.json")
+				cli.CliCommandWithoutTerminalOutputReturns([]string{string(statFile)}, nil)
+				stats = CallStatsAPI("xxx-xxx-xxxxx-xxxxx", cli, "192.xxx.x.255")
+
+			})
+			It("should print the table with stats data sorted by mem ratio desc", func() {
+				PrettyColumnPrint(stats, cli, b)
+				firstRatio := "0.08930087089538574"
+				secondRatio := "0.078125"
+				out := b.String()
+				Ω(strings.Index(out, firstRatio)).Should(BeNumerically("<", strings.Index(out, secondRatio)))
+			})
+			It("should print empty table when no data is returned by stats call", func(){
+				e := []AppStat{}
+				PrettyColumnPrint(e, cli, b)
+				out := b.String()
+				foundData := strings.Index(out, "cool-server")
+				Ω(foundData).Should(BeNumerically("==", -1))
 			})
 		})
 	})

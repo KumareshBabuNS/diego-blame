@@ -19,5 +19,26 @@
             "disk": 124211200
          }
       }
+   },
+   "1": {
+      "state": "RUNNING",
+      "stats": {
+         "name": "cool-server-1",
+         "uris": [
+            "cool-server-1.cfapps.xxx.pivotal.io"
+         ],
+         "host": "192.xxx.x.255",
+         "port": 60206,
+         "uptime": 1212485,
+         "mem_quota": 1073741824,
+         "disk_quota": 1073741824,
+         "fds_quota": 16384,
+         "usage": {
+            "time": "2016-07-06T20:54:27.173970087Z",
+            "cpu": 0.0004448610759843808,
+            "mem": 95886080,
+            "disk": 124211200
+         }
+      }
    }
 }

@@ -13,6 +13,7 @@ import (
 	"github.com/krujos/cfcurl"
 	"github.com/olekukonko/tablewriter"
 	"github.com/xchapter7x/lo"
+	"github.com/patrickmn/sortutil"
 )
 
 const name = "diego-blame"
@@ -40,12 +41,14 @@ func (c *DiegoBlame) Run(cli plugin.CliConnection, args []string) {
 		appStatusArray = append(appStatusArray, CallStatsAPI(guid, cli, hostSelector)...)
 	}
 
-	prettyColumnPrint(appStatusArray, cli, c.Writer)
+	PrettyColumnPrint(appStatusArray, cli, c.Writer)
 }
 
-func prettyColumnPrint(appStatusArray []AppStat, cli plugin.CliConnection, writer io.Writer) {
+func PrettyColumnPrint(appStatusArray []AppStat, cli plugin.CliConnection, writer io.Writer){
 	table := tablewriter.NewWriter(writer)
-	table.SetHeader([]string{"App Name/Instance", "State", "Host:Port", "Org", "Space", "Disk-Usage", "Disk-Quota", "Mem-Usage", "Mem-Quota", "CPU-Usage", "Uptime", "URIs"})
+	table.SetHeader([]string{"App Name/Instance", "State", "Host:Port", "Org", "Space", "Disk-Usage", "Disk-Quota", "Mem-Usage", "Mem-Quota", "Mem-Ratio", "CPU-Usage", "Uptime", "URIs"})
+
+	data := make([][]string, 0)
 
 	for _, status := range appStatusArray {
 		location := GetLocation(status.AppGUID, cli)
@@ -59,11 +62,17 @@ func prettyColumnPrint(appStatusArray []AppStat, cli plugin.CliConnection, write
 			formatBytes(status.Stats.DiskQuota),
 			formatBytes(status.Stats.Usage.Mem),
 			formatBytes(status.Stats.MemQuota),
+			fmt.Sprintf("%v", status.Stats.Usage.Mem / status.Stats.MemQuota),
 			formatPercent(status.Stats.Usage.CPU),
 			formatTime(status.Stats.Uptime),
 			fmt.Sprintf("%v", status.Stats.URIs),
 		}
-		table.Append(row)
+		data = append(data, row)
+	}
+
+	if ( 0 < len(data)) {
+		sortutil.DescByIndex(data, 9)
+		table.AppendBulk(data)
 	}
 	table.Render()
 }
