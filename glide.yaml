@@ -7,3 +7,4 @@ import:
 - package: github.com/patrickmn/sortutil
 - package: github.com/onsi/ginkgo
 - package: github.com/onsi/gomega
+- package: gopkg.in/yaml.v2

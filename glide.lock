@@ -1,5 +1,5 @@
-hash: 8621b5bfa10a05f0db1b0dfd03f752045c8d98da0e97140103b6d6d2c7e687fd
-updated: 2016-07-08T12:55:18.4813451-04:00
+hash: 09980f426fb9edf3858e47e9f47081414fac8d9227d9da325a71af77341cbff3
+updated: 2016-07-08T13:05:34.398231835-04:00
 imports:
 - name: github.com/cloudfoundry/cli
   version: 32ef774890eb79809f14362a294209ff80dd2f0d
@@ -21,9 +21,11 @@ imports:
 - name: github.com/patrickmn/sortutil
   version: abeda66eb583fac2d8d98d3d2e6fbd5c67af7947
 - name: github.com/pivotalservices/diego-blame
-  version: fadddfdf05050fe97765ca6773e9db3da66ff10e
+  version: 596fc33c29c8133b398235363db991e2a35fa9e7
   subpackages:
   - blameplugin
 - name: github.com/xchapter7x/lo
   version: aa2602d0e8e8647f0ce7b53109b37040941915aa
+- name: gopkg.in/yaml.v2
+  version: a83829b6f1293c91addabc89d0571c246397bbf4
 devImports: []
