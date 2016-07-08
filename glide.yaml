@@ -5,3 +5,5 @@ import:
   - plugin
 - package: github.com/olekukonko/tablewriter
 - package: github.com/patrickmn/sortutil
+- package: github.com/onsi/ginkgo
+- package: github.com/onsi/gomega
