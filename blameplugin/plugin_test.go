@@ -9,8 +9,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	. "github.com/pivotalservices/diego-blame/blameplugin"
-	"os"
-	"strconv"
+	"fmt"
 )
 
 var _ = Describe("DiegoBlame", func() {
@@ -102,24 +101,30 @@ var _ = Describe("DiegoBlame", func() {
 	})
 	Describe("Given an array of AppStat", func() {
 		var stats []AppStat
-		var b = os.Stdout
+		var b *bytes.Buffer
+		var cli = new(pluginfakes.FakeCliConnection)
 		Context("when table with application statistics is rendered", func() {
 			BeforeEach(func() {
+				b = new(bytes.Buffer)
 				cli := new(pluginfakes.FakeCliConnection)
 				statFile, _ := ioutil.ReadFile("fixtures/stats.json")
 				cli.CliCommandWithoutTerminalOutputReturns([]string{string(statFile)}, nil)
 				stats = CallStatsAPI("xxx-xxx-xxxxx-xxxxx", cli, "192.xxx.x.255")
+
 			})
 			It("should print the table with stats data sorted by mem ratio desc", func() {
-				sortedData := PrettyColumnPrint(stats, b)
-				memRatioOne, _ := strconv.ParseFloat(sortedData[0][7], 64)
-				memRatioTwo, _ := strconv.ParseFloat(sortedData[1][7], 64)
-				Ω(memRatioOne).Should(BeNumerically(">", memRatioTwo))
+				PrettyColumnPrint(stats, cli, b)
+				firstRatio := "0.08930087089538574"
+				secondRatio := "0.078125"
+				out := b.String()
+				Ω(strings.Index(out, firstRatio)).Should(BeNumerically("<", strings.Index(out, secondRatio)))
 			})
 			It("should print empty table when no data is returned by stats call", func(){
 				e := []AppStat{}
-				noData := PrettyColumnPrint(e, b)
-				Ω(noData).Should(BeEmpty())
+				PrettyColumnPrint(e, cli, b)
+				out := b.String()
+				foundData := strings.Index(out, "cool-server")
+				Ω(foundData).Should(BeNumerically("==", -1))
 			})
 		})
 	})
