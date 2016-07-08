@@ -9,7 +9,6 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	. "github.com/pivotalservices/diego-blame/blameplugin"
-	"fmt"
 )
 
 var _ = Describe("DiegoBlame", func() {
